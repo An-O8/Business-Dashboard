@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business Performance &amp; Revenue Analytics</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Page header + filters -->
+  <header class="page-header">
+    <div>
+      <h1>Business Performance &amp; Revenue Analytics</h1>
+      <p class="subtitle">Track your leads, conversions, quotations, deals, revenue and operations in real time.</p>
+    </div>
+    <div class="filters">
+      <div class="select-box date-box">
+        <span class="cal">📅</span><b class="range-text" id="rangeText"></b>
+        <select id="preset">
+          <option value="0">Today</option>
+          <option value="6">Last 7 Days</option>
+          <option value="29" selected>Last 30 Days</option>
+          <option value="custom">Custom Range</option>
+        </select>
+      </div>
+      <div class="custom-range" id="customRange" hidden>
+        <input type="date" id="fromDate">
+        <input type="date" id="toDate">
+        <button id="applyRange" class="btn-light">Apply</button>
+      </div>
+      <select id="userFilter" class="select-box"><option value="all">All Users</option></select>
+      <select id="deptFilter" class="select-box">
+        <option value="all">All Departments</option>
+        <option value="sales">Sales</option>
+        <option value="ops">Operations</option>
+      </select>
+      <button id="exportBtn" class="btn-primary">⬇ Export</button>
+    </div>
+  </header>
+  <p class="range-note" id="rangeNote"></p>
+
+  <!-- KPI cards -->
+  <section class="kpi-grid" id="kpis"></section>
+
+  <!-- Row: target, funnel, trend, sources -->
+  <section class="row row-leads">
+    <div class="card">
+      <h3 class="card-title">◎ Target Achievement</h3>
+      <div class="target-wrap">
+        <div class="target-left">
+          <div class="muted">Monthly Revenue Target</div>
+          <div class="big-number" id="targetValue"></div>
+          <div class="target-line"><span><i class="dot green"></i>Achieved</span><b id="achieved"></b><em id="achievedPct"></em></div>
+          <div class="target-line"><span><i class="dot grey"></i>Remaining</span><b id="remaining"></b><em id="remainingPct"></em></div>
+          <div class="progress"><div id="targetBar"></div></div>
+        </div>
+        <div class="target-right">
+          <div class="muted small">Target vs Achieved (Revenue)</div>
+          <div id="targetFunnel"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Lead Funnel</h3>
+      <div class="funnel-wrap" id="leadFunnel"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Daily Lead Trend</h3>
+      <div class="chart-box"><canvas id="leadTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Lead Sources</h3>
+      <div class="sources-wrap">
+        <div class="donut-box"><canvas id="sourceChart"></canvas><div class="donut-center" id="sourceCenter"></div></div>
+        <div id="sourceLegend" class="legend-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quotation analytics -->
+  <h2 class="section-title"><span class="ico">🗎</span>Quotation Analytics</h2>
+  <section class="row row-quotes">
+    <div class="card">
+      <h3 class="card-title">Quotations by Service / Order Category</h3>
+      <div class="chart-box"><canvas id="quoteByService"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Quotation Value by Service</h3>
+      <div class="value-funnel" id="valueFunnel"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Service Wise Quotation Details <small>(click a row)</small></h3>
+      <div class="scroll tall" id="serviceTable"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Quote to Deal Conversion Rate</h3>
+      <div class="gauge-box"><canvas id="gauge"></canvas><div class="gauge-center" id="gaugeCenter"></div></div>
+      <div class="gauge-caption" id="gaugeCaption"></div>
+    </div>
+  </section>
+
+  <!-- Deals & revenue -->
+  <h2 class="section-title"><span class="ico">$</span>Deals &amp; Revenue</h2>
+  <section class="row row-deals">
+    <div class="card">
+      <h3 class="card-title">Deals Created vs Deal Revenue (by Service)</h3>
+      <div class="chart-box"><canvas id="dealsByService"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Revenue by Order / Service Category</h3>
+      <div id="revenueBars" class="bar-list"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Priority Breakdown</h3>
+      <div id="priorityTable"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Daily Revenue Trend</h3>
+      <div class="chart-box"><canvas id="revenueTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Total vs Collected Revenue</h3>
+      <div id="revenueTotals"></div>
+    </div>
+  </section>
+
+  <!-- Team activity -->
+  <section class="row row-teams">
+    <div class="card" id="salesCard">
+      <h3 class="card-title">Sales Team Activity <span class="pill blue">Sales Team</span></h3>
+      <div class="scroll tall" id="salesTable"></div>
+    </div>
+    <div class="card" id="opsCard">
+      <h3 class="card-title">Operations Team Activity <span class="pill purple">Operations</span></h3>
+      <div class="scroll tall" id="opsTable"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Orders &amp; Stage Progress</h3>
+      <div class="stage-legend"><span><i class="dot orange"></i>Pending</span><span><i class="dot blue"></i>In Progress</span><span><i class="dot green"></i>Completed</span><span><i class="dot red"></i>On Hold</span></div>
+      <div id="stageBars" class="stage-list"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Recent CRM Activity</h3>
+      <div class="scroll tall" id="activity"></div>
+    </div>
+  </section>
+
+  <!-- Extra reports (drill-down entry points) -->
+  <h2 class="section-title"><span class="ico">⇄</span>Orders, Payments &amp; Drill-downs</h2>
+  <section class="row row-extra">
+    <div class="card">
+      <h3 class="card-title">Order Status</h3>
+      <div class="chart-box short"><canvas id="orderStatus"></canvas></div>
+      <div class="muted center" id="orderSummary"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Collection Trend (cumulative)</h3>
+      <div class="chart-box short"><canvas id="collectionTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Payment History <small>(click a row)</small></h3>
+      <div class="scroll" id="paymentTable"></div>
+    </div>
+  </section>
+  <section class="row row-extra2">
+    <div class="card">
+      <h3 class="card-title">Lead-wise History <small>(click a lead to drill down)</small></h3>
+      <div class="scroll tall" id="leadTable"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Deal Progress <small>(click a deal)</small></h3>
+      <div class="scroll tall" id="dealTable"></div>
+    </div>
+  </section>
+
+  <section class="row row-extra2">
+    <div class="card">
+      <h3 class="card-title">Lead Source Trend</h3>
+      <div class="chart-box"><canvas id="sourceTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Quotation Status</h3>
+      <div class="chart-box"><canvas id="quoteStatus"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Drill-down popup -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box">
+      <button class="btn-light close" id="modalClose">Close ✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
